@@ -1,4 +1,4 @@
-package safe_test
+package main_test
 
 import (
 	"github.com/stretchr/testify/assert"
