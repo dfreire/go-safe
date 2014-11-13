@@ -13,12 +13,6 @@ import (
 	"log"
 )
 
-func Open(dir string) {
-}
-
-func Close(dir string) {
-}
-
 func main() {
 	fmt.Printf("Password: ")
 	password := gopass.GetPasswd()
