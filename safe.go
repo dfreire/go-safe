@@ -11,9 +11,20 @@ import (
 	"github.com/howeyc/gopass"
 	"io"
 	"log"
+	"os"
+	"io/ioutil"
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		log.Fatal("No file given.")
+	}
+
+	inputData, err := ioutil.ReadFile(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Printf("Password: ")
 	password := gopass.GetPasswd()
 
@@ -21,10 +32,9 @@ func main() {
 	hasher.Write(password)
 	key := hasher.Sum(nil)
 
-	plaintext := []byte("some really really really long plaintext")
-	fmt.Printf("%s\n", plaintext)
+	fmt.Printf("%s\n", inputData)
 
-	ciphertext, err := encrypt(key, plaintext)
+	ciphertext, err := encrypt(key, inputData)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,4 +80,8 @@ func decrypt(key, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+func openFile() {
+
 }
