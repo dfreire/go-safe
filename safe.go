@@ -1,6 +1,7 @@
 package main
 
 import (
+	"golang.org/x/crypto/bcrypt"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -8,7 +9,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/howeyc/gopass"
+	"github.com/bowery/prompt"
 	"io"
 	"log"
 	"os"
@@ -26,10 +27,18 @@ func main() {
 	}
 
 	fmt.Printf("Password: ")
-	password := gopass.GetPasswd()
+	password, err := prompt.Password("Password")
+	if err != nil {
+		panic(err)
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
 
 	hasher := sha256.New()
-	hasher.Write(password)
+	hasher.Write(hash)
 	key := hasher.Sum(nil)
 
 	fmt.Printf("%s\n", inputData)
