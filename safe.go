@@ -1,7 +1,6 @@
 package main
 
 import (
-	"golang.org/x/crypto/bcrypt"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -10,10 +9,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bowery/prompt"
+	"golang.org/x/crypto/bcrypt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
-	"io/ioutil"
 )
 
 func main() {
