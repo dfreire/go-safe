@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -14,6 +15,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -21,7 +23,10 @@ func main() {
 		log.Fatal("No file given.")
 	}
 
-	inputData, err := ioutil.ReadFile(os.Args[1])
+	clearfile := filepath.Clean(os.Args[1])
+	encryptedfile := strings.Join([]string{clearfile, "aes"}, ".")
+
+	cleartext, err := ioutil.ReadFile(clearfile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,15 +46,19 @@ func main() {
 	hasher.Write(hash)
 	key := hasher.Sum(nil)
 
-	fmt.Printf("%s\n", inputData)
+	fmt.Printf("%s\n", cleartext)
 
-	ciphertext, err := encrypt(key, inputData)
+	encryptedtext, err := encrypt(key, cleartext)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%0x\n", ciphertext)
+	fmt.Printf("%0x\n", encryptedtext)
 
-	result, err := decrypt(key, ciphertext)
+	if err := ioutil.WriteFile(encryptedfile, encryptedtext, 0644); err != nil {
+		panic(err)
+	}
+
+	result, err := decrypt(key, encryptedtext)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,14 +71,14 @@ func encrypt(key, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	b := base64.StdEncoding.EncodeToString(text)
-	ciphertext := make([]byte, aes.BlockSize+len(b))
-	iv := ciphertext[:aes.BlockSize]
+	encryptedtext := make([]byte, aes.BlockSize+len(b))
+	iv := encryptedtext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return nil, err
 	}
 	cfb := cipher.NewCFBEncrypter(block, iv)
-	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
-	return ciphertext, nil
+	cfb.XORKeyStream(encryptedtext[aes.BlockSize:], []byte(b))
+	return encryptedtext, nil
 }
 
 func decrypt(key, text []byte) ([]byte, error) {
@@ -78,7 +87,7 @@ func decrypt(key, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	if len(text) < aes.BlockSize {
-		return nil, errors.New("ciphertext too short")
+		return nil, errors.New("encryptedtext too short")
 	}
 	iv := text[:aes.BlockSize]
 	text = text[aes.BlockSize:]
