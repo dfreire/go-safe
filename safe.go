@@ -23,7 +23,14 @@ func main() {
 		log.Fatal("No file given.")
 	}
 
-	clearfile := filepath.Clean(os.Args[1])
+	path := filepath.Clean(os.Args[1])
+	for _, file := range listFiles(path) {
+		encryptFile(file)
+	}
+}
+
+func encryptFile(clearfile string) {
+
 	encryptedfile := strings.Join([]string{clearfile, "aes"}, ".")
 
 	cleartext, err := ioutil.ReadFile(clearfile)
@@ -63,6 +70,10 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("%s\n", result)
+}
+
+func listFiles(path string) []string {
+	return []string{path}
 }
 
 func encrypt(key, text []byte) ([]byte, error) {
