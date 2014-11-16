@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -16,6 +15,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -23,21 +23,40 @@ func main() {
 		log.Fatal("No file given.")
 	}
 
-	path := filepath.Clean(os.Args[1])
-	for _, file := range listFiles(path) {
-		encryptFile(file)
+	root := filepath.Clean(os.Args[1])
+	key := promptPassword()
+	for _, file := range listFiles(root) {
+		log.Println(file)
+		encryptFile(key, file)
 	}
 }
 
-func encryptFile(clearfile string) {
-
-	encryptedfile := strings.Join([]string{clearfile, "aes"}, ".")
-
-	cleartext, err := ioutil.ReadFile(clearfile)
-	if err != nil {
-		log.Fatal(err)
+func listFiles(root string) []string {
+	files := []string{}
+	if err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		log.Println(path)
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if info.Name()[0:1] == "." {
+			return nil
+		}
+		if filepath.Ext(path) == ".aes" {
+			return nil
+		}
+		log.Println(path, "OK")
+		files = append(files, path)
+		return nil
+	}); err != nil {
+		panic(err)
 	}
+	return files
+}
 
+func promptPassword() []byte {
 	fmt.Printf("Password: ")
 	password, err := prompt.Password("Password")
 	if err != nil {
@@ -51,7 +70,17 @@ func encryptFile(clearfile string) {
 
 	hasher := sha256.New()
 	hasher.Write(hash)
-	key := hasher.Sum(nil)
+	return hasher.Sum(nil)
+}
+
+func encryptFile(key []byte, clearfile string) {
+
+	encryptedfile := strings.Join([]string{clearfile, "aes"}, ".")
+
+	cleartext, err := ioutil.ReadFile(clearfile)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	fmt.Printf("%s\n", cleartext)
 
@@ -70,10 +99,6 @@ func encryptFile(clearfile string) {
 		log.Fatal(err)
 	}
 	fmt.Printf("%s\n", result)
-}
-
-func listFiles(path string) []string {
-	return []string{path}
 }
 
 func encrypt(key, text []byte) ([]byte, error) {
