@@ -22,9 +22,21 @@ func main() {
 	if len(os.Args) < 2 {
 		log.Fatal("No file given.")
 	}
-
 	root := filepath.Clean(os.Args[1])
-	key := promptPassword()
+
+	password := promptPassword("Password")
+	if password != promptPassword("Repeat") {
+		log.Fatal("Passwords do not match.")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
+	hasher := sha256.New()
+	hasher.Write(hash)
+	key := hasher.Sum(nil)
+
 	for _, file := range listFiles(root) {
 		log.Println(file)
 		encryptFile(key, file)
@@ -56,21 +68,13 @@ func listFiles(root string) []string {
 	return files
 }
 
-func promptPassword() []byte {
-	fmt.Printf("Password: ")
-	password, err := prompt.Password("Password")
+func promptPassword(message string) string {
+	password, err := prompt.Password(message)
 	if err != nil {
 		panic(err)
 	}
+	return password
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		panic(err)
-	}
-
-	hasher := sha256.New()
-	hasher.Write(hash)
-	return hasher.Sum(nil)
 }
 
 func encryptFile(key []byte, clearfile string) {
