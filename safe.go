@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bowery/prompt"
-	"golang.org/x/crypto/bcrypt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -24,22 +23,14 @@ func main() {
 	}
 	root := filepath.Clean(os.Args[1])
 
-	password := promptPassword("Password")
-	if password != promptPassword("Repeat") {
+	hash := promptPassword("Password")
+	if hash != promptPassword("Repeat") {
 		log.Fatal("Passwords do not match.")
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		panic(err)
-	}
-	hasher := sha256.New()
-	hasher.Write(hash)
-	key := hasher.Sum(nil)
-
 	for _, file := range listFiles(root) {
 		log.Println(file)
-		encryptFile(key, file)
+		encryptFile([]byte(hash), file)
 	}
 }
 
@@ -73,12 +64,12 @@ func promptPassword(message string) string {
 	if err != nil {
 		panic(err)
 	}
-	return password
-
+	hasher := sha256.New()
+	hasher.Write([]byte(password))
+	return string(hasher.Sum(nil))
 }
 
 func encryptFile(key []byte, clearfile string) {
-
 	encryptedfile := strings.Join([]string{clearfile, "aes"}, ".")
 
 	cleartext, err := ioutil.ReadFile(clearfile)
