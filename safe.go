@@ -6,7 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"errors"
+	//"errors"
 	"fmt"
 	"github.com/bowery/prompt"
 	"io"
@@ -28,13 +28,32 @@ func main() {
 		log.Fatal("Passwords do not match.")
 	}
 
-	for _, file := range listFiles(root) {
-		log.Println(file)
-		encryptFile([]byte(hash), file)
+	key := []byte(hash)
+
+	for _, file := range listFilesToEncrypt(root) {
+		log.Println("Encrypt", file)
+		encryptFile(key, file)
 	}
+
+	/*
+		for _, file := range listFilesToDecrypt(root) {
+			log.Println("Decrypt", file)
+			decryptFile(key, file)
+		}
+	*/
 }
 
-func listFiles(root string) []string {
+func promptPassword(message string) string {
+	password, err := prompt.Password(message)
+	if err != nil {
+		panic(err)
+	}
+	hasher := sha256.New()
+	hasher.Write([]byte(password))
+	return string(hasher.Sum(nil))
+}
+
+func listFilesToEncrypt(root string) []string {
 	files := []string{}
 	if err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		log.Println(path)
@@ -59,16 +78,6 @@ func listFiles(root string) []string {
 	return files
 }
 
-func promptPassword(message string) string {
-	password, err := prompt.Password(message)
-	if err != nil {
-		panic(err)
-	}
-	hasher := sha256.New()
-	hasher.Write([]byte(password))
-	return string(hasher.Sum(nil))
-}
-
 func encryptFile(key []byte, clearfile string) {
 	encryptedfile := strings.Join([]string{clearfile, "aes"}, ".")
 
@@ -77,26 +86,19 @@ func encryptFile(key []byte, clearfile string) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("%s\n", cleartext)
+	fmt.Printf("Clear text: %s\n", cleartext)
 
-	encryptedtext, err := encrypt(key, cleartext)
+	encryptedtext, err := encryptText(key, cleartext)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%0x\n", encryptedtext)
 
 	if err := ioutil.WriteFile(encryptedfile, encryptedtext, 0644); err != nil {
 		panic(err)
 	}
-
-	result, err := decrypt(key, encryptedtext)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\n", result)
 }
 
-func encrypt(key, text []byte) ([]byte, error) {
+func encryptText(key, text []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -112,7 +114,46 @@ func encrypt(key, text []byte) ([]byte, error) {
 	return encryptedtext, nil
 }
 
-func decrypt(key, text []byte) ([]byte, error) {
+/*
+func listFilesToDecrypt(root string) []string {
+	files := []string{}
+	if err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		log.Println(path)
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if info.Name()[0:1] == "." {
+			return nil
+		}
+		if filepath.Ext(path) == ".aes" {
+			return nil
+		}
+		log.Println(path, "OK")
+		files = append(files, path)
+		return nil
+	}); err != nil {
+		panic(err)
+	}
+	return files
+}
+
+func decryptFile(key []byte, encryptedfile string) {
+	cleartext, err := ioutil.ReadFile(clearfile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result, err := decrypt(key, encryptedtext)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Decrypted %s\n", result)
+}
+
+func decryptText(key, text []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -130,7 +171,4 @@ func decrypt(key, text []byte) ([]byte, error) {
 	}
 	return data, nil
 }
-
-func openFile() {
-
-}
+*/
