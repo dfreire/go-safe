@@ -6,8 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	//"errors"
-	"fmt"
 	"github.com/bowery/prompt"
 	"io"
 	"io/ioutil"
@@ -35,12 +33,10 @@ func main() {
 		encryptFile(key, file)
 	}
 
-	/*
-		for _, file := range listFilesToDecrypt(root) {
-			log.Println("Decrypt", file)
-			decryptFile(key, file)
-		}
-	*/
+	for _, file := range listFilesToDecrypt(root) {
+		log.Println("Decrypt", file)
+		//decryptFile(key, file)
+	}
 }
 
 func promptPassword(message string) string {
@@ -56,7 +52,6 @@ func promptPassword(message string) string {
 func listFilesToEncrypt(root string) []string {
 	files := []string{}
 	if err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		log.Println(path)
 		if err != nil {
 			return err
 		}
@@ -69,7 +64,6 @@ func listFilesToEncrypt(root string) []string {
 		if filepath.Ext(path) == ".aes" {
 			return nil
 		}
-		log.Println(path, "OK")
 		files = append(files, path)
 		return nil
 	}); err != nil {
@@ -85,8 +79,6 @@ func encryptFile(key []byte, clearfile string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("Clear text: %s\n", cleartext)
 
 	encryptedtext, err := encryptText(key, cleartext)
 	if err != nil {
@@ -114,11 +106,9 @@ func encryptText(key, text []byte) ([]byte, error) {
 	return encryptedtext, nil
 }
 
-/*
 func listFilesToDecrypt(root string) []string {
 	files := []string{}
 	if err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		log.Println(path)
 		if err != nil {
 			return err
 		}
@@ -129,10 +119,8 @@ func listFilesToDecrypt(root string) []string {
 			return nil
 		}
 		if filepath.Ext(path) == ".aes" {
-			return nil
+			files = append(files, path)
 		}
-		log.Println(path, "OK")
-		files = append(files, path)
 		return nil
 	}); err != nil {
 		panic(err)
@@ -140,6 +128,7 @@ func listFilesToDecrypt(root string) []string {
 	return files
 }
 
+/*
 func decryptFile(key []byte, encryptedfile string) {
 	cleartext, err := ioutil.ReadFile(clearfile)
 	if err != nil {
