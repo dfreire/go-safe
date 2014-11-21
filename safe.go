@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"github.com/bowery/prompt"
 	"io"
 	"io/ioutil"
@@ -35,7 +36,7 @@ func main() {
 
 	for _, file := range listFilesToDecrypt(root) {
 		log.Println("Decrypt", file)
-		//decryptFile(key, file)
+		decryptFile(key, file)
 	}
 }
 
@@ -128,18 +129,21 @@ func listFilesToDecrypt(root string) []string {
 	return files
 }
 
-/*
 func decryptFile(key []byte, encryptedfile string) {
-	cleartext, err := ioutil.ReadFile(clearfile)
+	encryptedtext, err := ioutil.ReadFile(encryptedfile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	result, err := decrypt(key, encryptedtext)
+	cleartext, err := decryptText(key, encryptedtext)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Decrypted %s\n", result)
+
+	clearfile := strings.Split(encryptedfile, filepath.Ext(encryptedfile))[0]
+	if err := ioutil.WriteFile(clearfile, cleartext, 0644); err != nil {
+		panic(err)
+	}
 }
 
 func decryptText(key, text []byte) ([]byte, error) {
@@ -160,4 +164,3 @@ func decryptText(key, text []byte) ([]byte, error) {
 	}
 	return data, nil
 }
-*/
