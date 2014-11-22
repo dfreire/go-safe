@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"github.com/bowery/prompt"
+	"github.com/codegangsta/cli"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,6 +18,15 @@ import (
 )
 
 func main() {
+	app := cli.NewApp()
+	app.Name = "greet"
+	app.Usage = "fight the loneliness!"
+	app.Action = func(c *cli.Context) {
+		println("Hello friend!")
+	}
+
+	app.Run(os.Args)
+
 	if len(os.Args) < 2 {
 		log.Fatal("No file given.")
 	}
