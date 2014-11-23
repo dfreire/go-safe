@@ -19,35 +19,51 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "greet"
-	app.Usage = "fight the loneliness!"
-	app.Action = func(c *cli.Context) {
-		println("Hello friend!")
+	app.Name = "gosafe"
+	app.Usage = "encrypt and decrypt files"
+
+	app.Commands = []cli.Command{
+		{
+			Name:      "encrypt",
+			ShortName: "e",
+			Usage:     "encrypt the given file or all files inside the given directory",
+			Action: func(c *cli.Context) {
+				root := filepath.Clean(c.Args().First())
+				hash := promptPassword("Password")
+				if hash != promptPassword("Repeat") {
+					log.Fatal("Passwords do not match.")
+				}
+
+				key := []byte(hash)
+
+				for _, file := range listFilesToEncrypt(root) {
+					log.Println("Encrypt", file)
+					encryptFile(key, file)
+				}
+			},
+		},
+		{
+			Name:      "decrypt",
+			ShortName: "d",
+			Usage:     "decrypt the given file or all files inside the given directory",
+			Action: func(c *cli.Context) {
+				root := filepath.Clean(c.Args().First())
+				hash := promptPassword("Password")
+				if hash != promptPassword("Repeat") {
+					log.Fatal("Passwords do not match.")
+				}
+
+				key := []byte(hash)
+
+				for _, file := range listFilesToDecrypt(root) {
+					log.Println("Decrypt", file)
+					decryptFile(key, file)
+				}
+			},
+		},
 	}
 
 	app.Run(os.Args)
-
-	if len(os.Args) < 2 {
-		log.Fatal("No file given.")
-	}
-	root := filepath.Clean(os.Args[1])
-
-	hash := promptPassword("Password")
-	if hash != promptPassword("Repeat") {
-		log.Fatal("Passwords do not match.")
-	}
-
-	key := []byte(hash)
-
-	for _, file := range listFilesToEncrypt(root) {
-		log.Println("Encrypt", file)
-		encryptFile(key, file)
-	}
-
-	for _, file := range listFilesToDecrypt(root) {
-		log.Println("Decrypt", file)
-		decryptFile(key, file)
-	}
 }
 
 func promptPassword(message string) string {
