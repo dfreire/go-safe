@@ -21,6 +21,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "gosafe"
 	app.Usage = "encrypt and decrypt files"
+	app.Version = "0.0.1"
 
 	app.Commands = []cli.Command{
 		{
